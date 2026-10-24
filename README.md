@@ -1,8 +1,12 @@
-# Tesla Roadster Simulation
+# Rocket Roadster
+**Tesla Roadster Simulation** · simulatore 3D nel browser, con controller PS5
 
 🇮🇹 Italiano · [🇬🇧 English](#english)
 
-![Tesla Roadster Simulation: sfida Salto con getti di gas compresso](docs/screenshot.jpg)
+### ▶ [Gioca subito online](https://francesco2011-source.github.io/rocket-roadster/)
+Nessuna installazione: apri il link con Chrome o Edge, collega il controller PS5 e premi un tasto.
+
+![Rocket Roadster: sfida Salto con getti di gas compresso](docs/screenshot.jpg)
 
 Simulatore 3D che gira nel browser: guidi una Tesla Roadster dotata di 10 propulsori a gas compresso e di una ventola di aspirazione sotto il pianale (il pacchetto SpaceX descritto nel codice). La guida è libera, con fisica a corpo rigido, e si controlla soprattutto con il **controller PS5 (DualSense)**; funziona anche con tastiera e mouse. Non serve nessuna build: si avvia con un piccolo server locale in Python e usa la libreria three.js inclusa nel repository.
 
@@ -117,7 +121,10 @@ MIT (codice). Asset di terze parti: vedi [CREDITS.md](CREDITS.md).
 <a id="english"></a>
 # English
 
-![Tesla Roadster Simulation: Jump challenge with compressed-gas jets](docs/screenshot.jpg)
+### ▶ [Play online now](https://francesco2011-source.github.io/rocket-roadster/)
+No install: open the link in Chrome or Edge, connect the PS5 controller and press any button.
+
+![Rocket Roadster: Jump challenge with compressed-gas jets](docs/screenshot.jpg)
 
 A 3D simulator that runs in the browser: you drive a Tesla Roadster fitted with 10 compressed-gas thrusters and an underfloor suction fan (the SpaceX package described in the code). Free-roam driving with rigid-body physics, designed mainly for the **PS5 DualSense controller**; keyboard and mouse work too. No build step: a tiny local Python server serves the game, and three.js is bundled in the repository.
 
