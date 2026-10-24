@@ -1,4 +1,4 @@
-// Tesla Roadster 3D — guida libera con fisica a corpo rigido, sospensioni a raggio,
+// Tesla Roadster Simulation — guida libera con fisica a corpo rigido, sospensioni a raggio,
 // pneumatici con cerchio d'attrito, aspirazione a ventola e 10 propulsori ad aria compressa.
 //
 // Dati di riferimento (presentazione del 15/10/2026 e dichiarazioni Tesla/SpaceX):
