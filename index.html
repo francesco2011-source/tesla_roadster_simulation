@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesla Roadster 3D</title>
+<meta name="description" content="A browser-based 3D physics game: drive a Tesla Roadster with SpaceX cold-gas thrusters and a suction fan up a J-shaped ramp, through a test grid and stunt park.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111'/%3E%3Cpath d='M8 9h16v3h-6.5v12h-3V12H8z' fill='%23f2f1ec'/%3E%3C/svg%3E">
+<style>
+  :root { --fg: #f2f1ec; --dim: #8d8b84; --panel: rgba(18,18,17,.72); --line: rgba(255,255,255,.09); --accent: #ff7a2f; --gas: #9fd8ff; --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b0b0c; color: var(--fg); font: 13px/1.35 var(--font); overflow: hidden; }
+  canvas { display: block; outline: none; }
+  .hud { position: fixed; pointer-events: none; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(8px); }
+  #tl { top: 16px; left: 16px; padding: 10px 14px; min-width: 190px; }
+  #tl .big { font-size: 22px; font-weight: 600; }
+  #tl .row { color: var(--dim); }
+  #tl .row b { color: var(--fg); font-weight: 600; }
+  #tr { top: 16px; right: 16px; padding: 10px; width: 138px; text-align: center; }
+  #tr .ttl { color: var(--dim); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+  #thr circle.n { fill: #2a2a2c; stroke: #555; stroke-width: .03; }
+  #br { right: 16px; bottom: 16px; padding: 10px 14px; display: flex; gap: 16px; align-items: flex-end; }
+  .g { text-align: left; min-width: 54px; }
+  .g .l { color: var(--dim); font-size: 11px; }
+  .g .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .g .v small { font-size: 11px; color: var(--dim); margin-left: 2px; font-weight: 400; }
+  .tank { width: 10px; height: 46px; border-radius: 5px; background: rgba(255,255,255,.08); position: relative; overflow: hidden; }
+  .tank i { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: var(--gas); transform-origin: bottom; }
+  .tank.low i { background: #ff6b5a; }
+  #bl { left: 16px; bottom: 16px; padding: 8px 12px; color: var(--dim); }
+  #bl b { color: var(--fg); font-weight: 600; }
+  #minimap { left: 16px; bottom: 58px; padding: 0; }
+  @media (max-height: 560px) { #minimap { display: none; } }
+  kbd { display: inline-block; min-width: 20px; padding: 0 6px; border: 1px solid rgba(255,255,255,.28); border-radius: 5px; font: 600 11px/18px var(--font); text-align: center; }
+  #toast { top: 18%; left: 50%; transform: translate(-50%, -8px); padding: 10px 18px; text-align: center; opacity: 0; transition: opacity .35s, transform .35s; max-width: min(640px, calc(100vw - 32px)); }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #toast .t { font-size: 20px; font-weight: 600; }
+  #toast .s { color: var(--dim); }
+  /* pulsanti ai bordi: comandi e impostazioni */
+  .edgeBtn { position: fixed; top: 16px; pointer-events: auto; cursor: pointer; padding: 7px 14px; color: var(--fg); font: 600 12px var(--font); border-radius: 10px; }
+  .edgeBtn:hover { border-color: rgba(255,255,255,.3); }
+  #helpBtn { left: calc(50% - 6px); transform: translateX(-100%); }
+  #setBtn { left: calc(50% + 6px); }
+  .modal { position: fixed; inset: 0; display: none; place-items: center; background: rgba(6,6,6,.58); z-index: 9; }
+  .modal.on { display: grid; }
+  .modal .card { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 18px 20px 16px; }
+  .modal h2 { margin: 0 0 2px; font-size: 18px; font-weight: 600; }
+  .modal h3 { margin: 14px 0 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; }
+  .modal .hint2 { color: var(--dim); font-size: 11px; margin-bottom: 12px; }
+  .modal .btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .modal button.b { padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: var(--fg); font: 600 12px var(--font); cursor: pointer; }
+  .modal button.b.primary { background: #f2f1ec; color: #111; border-color: #f2f1ec; }
+  #settings .card { width: min(440px, calc(100vw - 32px)); }
+  .srow { padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; margin: 0 -10px; }
+  .srow.sel { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.04); }
+  .srow .top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .srow .top span:first-child { color: var(--dim); }
+  .srow .top b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .srow input[type=range] { width: 100%; accent-color: #f2f1ec; }
+  .cols { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .cols div { display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); padding: 4px 0; }
+  .cols span:first-child { color: var(--dim); }
+  .cols span:last-child { text-align: right; white-space: nowrap; }
+  #helpTip { color: var(--dim); font-size: 11px; margin-top: 12px; }
+  #start { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8,8,8,.74); z-index: 10; cursor: pointer; }
+  #start .card { max-width: 520px; padding: 28px 32px; text-align: center; }
+  #start h1 { margin: 0 0 6px; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+  #start p { color: var(--dim); margin: 0 0 18px; }
+  #start .go { font-weight: 600; font-size: 15px; }
+  #start .sub { color: var(--dim); font-size: 11px; margin-top: 10px; }
+  @media (max-width: 640px) { #tr { display: none; } #helpBtn { transform: none; left: 16px; top: 112px; } #setBtn { left: 16px; top: 150px; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="tl" class="hud panel">
+  <div class="big" id="testN">—</div>
+  <div class="row"><span data-i18n="ui.best">Record</span>: <b id="best">—</b></div>
+  <div class="row"><span data-i18n="ui.challenge">Sfida</span>: <b id="chal">—</b> · <span data-i18n="ui.view">Vista</span>: <b id="view">—</b></div>
+</div>
+<canvas id="minimap" class="hud panel" width="200" height="150"></canvas>
+
+<div id="tr" class="hud panel">
+  <div class="ttl" data-i18n="ui.thrusters">Propulsori</div>
+  <svg id="thr" viewBox="-1.5 -2.75 3 5.5" width="118" height="216">
+    <rect x="-1" y="-2.3" width="2" height="4.6" rx=".55" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".04"/>
+    <rect x="-.62" y="-.75" width="1.24" height="1.5" rx=".25" fill="rgba(255,255,255,.06)"/>
+    <text id="thrFront" x="0" y="-2.45" fill="#8d8b84" font-size=".22" text-anchor="middle">fronte</text>
+  </svg>
+  <div class="ttl" id="thrInfo" style="margin-top:2px">—</div>
+</div>
+
+<div id="br" class="hud panel">
+  <div class="g"><div class="l" data-i18n="ui.speed">Velocità</div><div class="v" id="spd">0<small>km/h</small></div></div>
+  <div class="g"><div class="l" data-i18n="ui.height">Altezza</div><div class="v" id="alt">0.0<small>m</small></div></div>
+  <div class="g"><div class="l">G</div><div class="v" id="gf">1.0<small>g</small></div></div>
+  <div class="g"><div class="l" data-i18n="ui.suction">Aspirazione</div><div class="v" id="suc">0<small>%</small></div></div>
+  <div class="g"><div class="l" data-i18n="ui.gas">Gas</div><div class="v" id="bar">600<small>L</small></div></div>
+  <div class="tank" id="tank"><i id="tankI"></i></div>
+</div>
+
+<div id="bl" class="hud panel"><span data-i18n="ui.suction">Aspirazione</span> <b id="sucMode">—</b> · <span data-i18n="ui.tc">Controllo trazione</span> <b id="tcMode">ON</b></div>
+
+<button id="helpBtn" class="edgeBtn panel" type="button" data-i18n="ui.controls">Comandi</button>
+<button id="setBtn" class="edgeBtn panel" type="button" data-i18n="ui.settings">Impostazioni</button>
+
+<div id="settings" class="modal">
+  <div class="card panel">
+    <h2 data-i18n="ui.settings">Impostazioni</h2>
+    <div class="hint2" data-i18n="ui.setHint"></div>
+    <div id="setRows"></div>
+    <div class="btns"><button class="b" type="button" id="setReset" data-i18n="ui.defaults">Valori originali</button><button class="b primary" type="button" id="setClose" data-i18n="ui.close">Chiudi</button></div>
+  </div>
+</div>
+
+<div id="help" class="modal">
+  <div class="card panel">
+    <h2 data-i18n="ui.helpTitle">Comandi</h2>
+    <h3 data-i18n="ui.helpPad">Controller PS5</h3>
+    <div class="cols" id="helpPad"></div>
+    <h3 data-i18n="ui.helpKb">Tastiera</h3>
+    <div class="cols" id="helpKb"></div>
+    <div id="helpTip" data-i18n="h.tip"></div>
+    <div class="btns"><button class="b primary" type="button" id="helpClose" data-i18n="ui.close">Chiudi</button></div>
+  </div>
+</div>
+
+<div id="toast" class="hud panel"><div class="t" id="toastT"></div><div class="s" id="toastS"></div></div>
+
+<div id="start">
+  <div class="card panel">
+    <h1>Tesla Roadster 3D</h1>
+    <p data-i18n="ui.blurb"></p>
+    <div class="go" data-i18n="ui.start"></div>
+    <div class="sub"><kbd>?</kbd> · <span data-i18n="ui.controls">Comandi</span></div>
+  </div>
+</div>
+
+<script type="module" src="./game.js"></script>
+</body>
+</html>
